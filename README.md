@@ -1,6 +1,6 @@
 # CycloneDX Integrity Verification
 
-A command-line tool that verifies the integrity of [CycloneDX](https://cyclonedx.org/) Software Bill of Materials (SBOM) files in JSON format. It checks that:
+A command-line tool that verifies the integrity of files on disk against a [CycloneDX](https://cyclonedx.org/) Software Bill of Materials (SBOM) files in JSON format. It checks that:
 
 1. **Signatures** are valid (JSF signature verification)
 2. **File hashes** match what the SBOM declares
