@@ -712,4 +712,135 @@ public class VerifyTests : IDisposable
         Assert.All(results[0].HashResults,
             r => Assert.Equal(HashVerificationStatus.Pass, r.Status));
     }
+
+    // --- Metadata component ---
+
+    [Fact]
+    public void MetadataComponent_FileWithCorrectHash_Passes()
+    {
+        var path = CreateFile("meta.txt", "metadata");
+        var hash = ComputeSha256(path);
+
+        var bom = new Bom
+        {
+            Metadata = new Metadata
+            {
+                Component = new Component
+                {
+                    Name = "meta.txt",
+                    Type = Component.Classification.File,
+                    Hashes = new List<Hash>
+                    {
+                        new() { Alg = HashAlg.SHA_256, Content = hash }
+                    }
+                }
+            }
+        };
+
+        var results = HashVerifier.Verify(bom, _baseDir);
+
+        Assert.Single(results);
+        Assert.Equal(ComponentVerificationStatus.Pass, results[0].Status);
+    }
+
+    [Fact]
+    public void MetadataComponent_WithNestedFileChildren_Passes()
+    {
+        var path = CreateFile("child.txt", "child");
+        var hash = ComputeSha256(path);
+
+        var bom = new Bom
+        {
+            Metadata = new Metadata
+            {
+                Component = new Component
+                {
+                    Name = "my-app",
+                    Type = Component.Classification.Application,
+                    Components = new List<Component>
+                    {
+                        new()
+                        {
+                            Name = "child.txt",
+                            Type = Component.Classification.File,
+                            Hashes = new List<Hash>
+                            {
+                                new() { Alg = HashAlg.SHA_256, Content = hash }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var results = HashVerifier.Verify(bom, _baseDir);
+
+        Assert.Single(results);
+        Assert.Equal("my-app", results[0].ComponentName);
+        Assert.Equal(ComponentVerificationStatus.Pass, results[0].Status);
+        Assert.Single(results[0].SubComponentResults);
+        Assert.Equal(ComponentVerificationStatus.Pass, results[0].SubComponentResults[0].Status);
+    }
+
+    [Fact]
+    public void MetadataComponent_AndTopLevelComponents_BothVerified()
+    {
+        var metaPath = CreateFile("meta.txt", "meta");
+        var compPath = CreateFile("comp.txt", "comp");
+
+        var bom = new Bom
+        {
+            Metadata = new Metadata
+            {
+                Component = new Component
+                {
+                    Name = "meta.txt",
+                    Type = Component.Classification.File,
+                    Hashes = new List<Hash>
+                    {
+                        new() { Alg = HashAlg.SHA_256, Content = ComputeSha256(metaPath) }
+                    }
+                }
+            },
+            Components = new List<Component>
+            {
+                new()
+                {
+                    Name = "comp.txt",
+                    Type = Component.Classification.File,
+                    Hashes = new List<Hash>
+                    {
+                        new() { Alg = HashAlg.SHA_256, Content = ComputeSha256(compPath) }
+                    }
+                }
+            }
+        };
+
+        var results = HashVerifier.Verify(bom, _baseDir);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal("meta.txt", results[0].ComponentName);
+        Assert.Equal("comp.txt", results[1].ComponentName);
+        Assert.All(results, r => Assert.Equal(ComponentVerificationStatus.Pass, r.Status));
+    }
+
+    [Fact]
+    public void MetadataComponent_NonFileNoChildren_ReturnsEmpty()
+    {
+        var bom = new Bom
+        {
+            Metadata = new Metadata
+            {
+                Component = new Component
+                {
+                    Name = "my-app",
+                    Type = Component.Classification.Application,
+                }
+            }
+        };
+
+        var results = HashVerifier.Verify(bom, _baseDir);
+
+        Assert.Empty(results);
+    }
 }

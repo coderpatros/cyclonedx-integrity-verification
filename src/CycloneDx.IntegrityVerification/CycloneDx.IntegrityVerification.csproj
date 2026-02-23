@@ -17,7 +17,7 @@
     <PackageReference Include="CycloneDX.Core" Version="11.0.0" />
     <PackageReference Include="CoderPatros.Jsf" Version="0.1.0" />
     <PackageReference Include="CoderPatros.AntPathMatching" Version="1.0.0" />
-    <PackageReference Include="CycloneDX.MSBuildTask" Version="0.0.3">
+    <PackageReference Include="CycloneDX.MSBuildTask" Version="0.0.7">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

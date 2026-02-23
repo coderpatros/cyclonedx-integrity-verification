@@ -83,14 +83,21 @@ public static class HashVerifier
     {
         var results = new List<ComponentVerificationResult>();
 
-        if (bom.Components is null)
-            return results;
-
-        foreach (var component in bom.Components)
+        if (bom.Metadata?.Component is not null)
         {
-            var result = VerifyComponent(component, baseDir);
+            var result = VerifyComponent(bom.Metadata.Component, baseDir);
             if (result is not null)
                 results.Add(result);
+        }
+
+        if (bom.Components is not null)
+        {
+            foreach (var component in bom.Components)
+            {
+                var result = VerifyComponent(component, baseDir);
+                if (result is not null)
+                    results.Add(result);
+            }
         }
 
         return results;
